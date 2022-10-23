@@ -1,0 +1,18 @@
+{
+  "start": {
+    "misc": {
+      "shape": "rounded_rectangle",
+      "shape_corner_radius": "4",
+      "border_width": "1",
+      "shadow_width": "2"
+    }
+  },
+  "quit": {
+    "misc": {
+      "shape": "rounded_rectangle",
+      "shape_corner_radius": "4",
+      "border_width": "1",
+      "shadow_width": "2"
+    }
+  }
+}
