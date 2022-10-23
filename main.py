@@ -1,10 +1,14 @@
 import time
+from typing import Tuple
 
 import pygame as pg
 import pygame.event
 import pygame_gui as pggui
+import numpy.random
 
-from constants import TARGET_FPS
+from constants import TARGET_FPS, attr
+from states.battle import Battle, Enemy
+from states.game_world import Player
 from states.menu import Menu
 from states.state import State
 
@@ -17,7 +21,7 @@ class Game:
         self.ui_manager = pggui.UIManager((self.SCREEN_WIDTH, self.SCREEN_HEIGHT), 'assets/themes/button_theme.json')
         self.dt, self.prev_time = 0.0, 0.0
         self.running, self.playing = True, True
-        self.actions: dict[str, bool | pggui.elements.UIButton | None] = {
+        self.actions: dict[str, bool | Tuple[int,int] | pggui.elements.UIButton | None] = {
             'left': False,
             'right': False,
             'up': False,
@@ -26,9 +30,16 @@ class Game:
             'button_click': None,
             'pause': False,
             'resize': True,
+            'mouse_click': (0,0),
+            'change': False,
+            'act': False,
+            'def': False,
+            'debuff': False,
         }
         self.state_stack: list[State] = []
         self.init_state()
+        self.player = Player(self)
+        
 
     def init_screen(self, width, height):
         self.screen = pg.display.set_mode((width, height), pg.RESIZABLE)
@@ -63,23 +74,36 @@ class Game:
                     self.init_screen(event.w, event.h)
                 case pggui.UI_BUTTON_PRESSED:
                     self.actions['button_click'] = event.ui_element
+                case pg.MOUSEBUTTONDOWN:
+                    if isinstance(self.state_stack[-1],Battle):
+                        self.actions['mouse_click'] = pg.mouse.get_pos()
             self.ui_manager.process_events(event)
 
         # handle consecutive key pressed
         pressed = pygame.key.get_pressed()
-        if pressed[pg.K_a]:
-            self.actions['left'] = True
-        elif pressed[pg.K_d]:
-            self.actions['right'] = True
-        else:
-            self.actions['left'] = self.actions['right'] = False
+        if isinstance(self.state_stack[-1],Battle)==False:
+            if pressed[pg.K_a]:
+                self.actions['left'] = True
+            elif pressed[pg.K_d]:
+                self.actions['right'] = True
+            else:
+                self.actions['left'] = self.actions['right'] = False
 
-        if pressed[pg.K_s]:
-            self.actions['down'] = True
-        elif pressed[pg.K_w]:
-            self.actions['up'] = True
+            if pressed[pg.K_s]:
+                self.actions['down'] = True
+            elif pressed[pg.K_w]:
+                self.actions['up'] = True
+            else:
+                self.actions['down'] = self.actions['up'] = False
         else:
-            self.actions['down'] = self.actions['up'] = False
+            if pressed[pg.K_x]:
+                self.actions['change'] = True
+            elif pressed[pg.K_z]:
+                self.actions['act'] = True
+            elif pressed[pg.K_c]:
+                self.actions['debuff'] = True
+            elif pressed[pg.K_d]:
+                self.actions['def'] = True
 
     def update(self):
         dt = self.dt * TARGET_FPS

@@ -1,12 +1,16 @@
+from enum import Enum
+from pickle import TRUE
 import numpy.random
 import pygame.image
 import pyscroll
 import pytmx
 from pygame.sprite import Sprite
 
-from constants import BLACK, RESOURCES_DIR
+from constants import BLACK, RESOURCES_DIR, MOVESET
+from states.battle import Battle
 from states.pause_menu import PauseMenu
 from states.state import State
+
 
 
 class Player(Sprite):
@@ -16,6 +20,14 @@ class Player(Sprite):
         image.set_colorkey(BLACK)
         self.last_updated, self.current_frame = 0, 0
         self.game = game
+        self.health = 200
+        self.max_health = 250
+        self.strength = 10
+        self.potion = 0
+        self.live = TRUE
+        self.move_set: list[MOVESET] = [
+            MOVESET.ATT, MOVESET.DEF, MOVESET.ULT
+        ]
         # Hard code frames
         self.walking_frames = {
             'left': [
@@ -108,7 +120,7 @@ class GameWorld(State):
         self.group = pyscroll.PyscrollGroup(map_layer=self.map_layer, default_layer=2)
 
         # put the hero in the center of the map
-        self.hero = Player(game)
+        self.hero = game.player
         self.hero.position = list(self.map_layer.map_rect.center)
 
         # add our hero to the group
@@ -124,9 +136,15 @@ class GameWorld(State):
         distance = (self.hero.rect.x - self.map_layer.map_rect.center[0])**2 + (self.hero.rect.y - self.map_layer.map_rect.center[1])**2
 
         # 1 / 1000  chance of encounter enemy
-        if distance > 1000000 and int(numpy.random.uniform(0, 1000)) == 500:
+        # if distance > 1000000 and int(numpy.random.uniform(0, 1000)) == 500:
             # TODO: spawn enemy
-            pass
+            # print('spawned')
+            # self.game.fools.append(Enemy(self.game,attr[numpy.random.uniform(0, 11)%3] ))
+            # self.game.fools[-1].position[0] = self.hero.position[0]+100+numpy.random.uniform(0, 11)
+            # self.game.fools[-1].position[1] = self.hero.position[1]+100+numpy.random.uniform(0, 11)
+        Battle(self.game,self.hero).enter_state()
+        # pass
+            
 
         for sprite in self.group.sprites():
             if isinstance(sprite, Player):
