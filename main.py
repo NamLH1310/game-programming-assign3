@@ -20,7 +20,7 @@ class Game:
         self.screen = pg.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT), pg.RESIZABLE)
         self.ui_manager = pggui.UIManager((self.SCREEN_WIDTH, self.SCREEN_HEIGHT), 'assets/themes/button_theme.json')
         self.dt, self.prev_time = 0.0, 0.0
-        self.running, self.playing = True, True
+        self.running, self.playing, self.win, self.lose = True, True, False, False
         self.actions: dict[str, bool | Tuple[int,int] | pggui.elements.UIButton | None] = {
             'left': False,
             'right': False,
@@ -35,6 +35,7 @@ class Game:
             'act': False,
             'def': False,
             'debuff': False,
+            'ult': False
         }
         self.state_stack: list[State] = []
         self.init_state()
@@ -47,6 +48,10 @@ class Game:
     def run(self):
         while self.running:
             self.game_loop()
+            if self.win:
+                print('win')
+            if self.lose:
+                print('lose')
 
     def game_loop(self):
         while self.playing:
@@ -61,6 +66,8 @@ class Game:
         self.prev_time = now
 
     def handle_events(self):
+        
+        self.actions['change'] = self.actions['act'] = self.actions['def'] =self.actions['debuff']= self.actions['ult']=False
 
         # handle events and single key pressed
         self.actions['mouse_click'] = None
@@ -105,6 +112,8 @@ class Game:
                 self.actions['debuff'] = True
             elif pressed[pg.K_d]:
                 self.actions['def'] = True
+            elif pressed[pg.K_v]:
+                self.actions['ult'] = True
 
     def update(self):
         dt = self.dt * TARGET_FPS

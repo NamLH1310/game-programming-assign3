@@ -7,7 +7,7 @@ import pytmx
 from pygame.sprite import Sprite
 
 from constants import BLACK, RESOURCES_DIR, MOVESET
-from states.battle import Battle
+from states.battle import Battle, BossBattle
 from states.pause_menu import PauseMenu
 from states.state import State
 
@@ -29,7 +29,12 @@ class Player(Sprite):
         self.buff = 1
         self.debuff = 0
         self.move_set: list[MOVESET] = [
-            MOVESET.ATT, MOVESET.DEF, MOVESET.PURE
+            MOVESET.ATT, MOVESET.DEF
+        ]
+        self.ult_counter = 0
+        self.attr_index=0
+        self.attr_list: list[MOVESET]=[
+            MOVESET.PURE
         ]
         self.state = MOVESET.ATT
         # Hard code frames
@@ -104,14 +109,27 @@ class Player(Sprite):
              if self.attr == target.attr and target.state == MOVESET.DEF:
                  attack = 0
              target.health-=attack
-        if self.state == MOVESET.DEBUFF:
+        elif self.state == MOVESET.DEBUFF:
              if target == self:
                  target.buff += 0.1
              else:
                  target.debuff-=0.1
-                 
+        elif self.state == MOVESET.DEF:
+            attack = self.strength * 2
+            if target.state == MOVESET.DEF:
+                target.health-=attack
+            self.buff+=0.1
+        elif self.state == MOVESET.ULT:
+            self.ult_counter +=1
+            if self.ult_counter == 3:
+                attack = self.strength*(self.buff-self.debuff) * 50
+                target.health -= attack
+                self.move_set.remove(MOVESET.ULT)
+                  
     def change_attr(self):
-        pass
+        print('change')
+        self.attr_index = (self.attr_index+1)%len(self.attr_list)
+        self.attr = self.attr_list[self.attr_index]
 
 class GameWorld(State):
     def __init__(self, game):
@@ -158,10 +176,10 @@ class GameWorld(State):
         distance = (self.hero.rect.x - self.map_layer.map_rect.center[0])**2 + (self.hero.rect.y - self.map_layer.map_rect.center[1])**2
 
         # 1 / 1000  chance of encounter enemy
-        # if distance > 1000000 and int(numpy.random.uniform(0, 1000)) == 500:
-        #     # TODO: spawn enemy
-        #     Battle(self.game, self.hero).enter_state()
-        Battle(self.game, self.hero).enter_state()
+        if distance > 1000000 and int(numpy.random.uniform(0, 1000)) == 500:
+            # TODO: spawn enemy
+            Battle(self.game, self.hero).enter_state()
+        # Battle(self.game, self.hero).enter_state()
         # pass
             
 
@@ -171,6 +189,7 @@ class GameWorld(State):
                     sprite.move_back()
                 elif sprite.feet.colliderect(self.cave):
                     # TODO: BOSS fight
+                    BossBattle(self.game,self.hero).enter_state()
                     pass
 
     def render(self, surface):
