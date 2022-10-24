@@ -19,15 +19,19 @@ class Player(Sprite):
         image = pygame.image.load(f'{RESOURCES_DIR}/graphics/player.png').convert()
         image.set_colorkey(BLACK)
         self.last_updated, self.current_frame = 0, 0
+        self.attr = MOVESET.PURE
         self.game = game
         self.health = 200
         self.max_health = 250
         self.strength = 10
         self.potion = 0
-        self.live = TRUE
+        self.live = True
+        self.buff = 1
+        self.debuff = 0
         self.move_set: list[MOVESET] = [
-            MOVESET.ATT, MOVESET.DEF, MOVESET.ULT
+            MOVESET.ATT, MOVESET.DEF, MOVESET.PURE
         ]
+        self.state = MOVESET.ATT
         # Hard code frames
         self.walking_frames = {
             'left': [
@@ -92,6 +96,22 @@ class Player(Sprite):
         self.rect.topleft = self.position
         self.feet.midbottom = self.rect.midbottom
 
+    def fight(self, target)->None:
+        if self.state == MOVESET.ATT:
+             attack = self.strength*(self.buff-self.debuff)
+             if attack<0:
+                 attack=0
+             if self.attr == target.attr and target.state == MOVESET.DEF:
+                 attack = 0
+             target.health-=attack
+        if self.state == MOVESET.DEBUFF:
+             if target == self:
+                 target.buff += 0.1
+             else:
+                 target.debuff-=0.1
+                 
+    def change_attr(self):
+        pass
 
 class GameWorld(State):
     def __init__(self, game):
@@ -131,18 +151,17 @@ class GameWorld(State):
             PauseMenu(self.game).enter_state()
         elif actions['resize']:
             self.map_layer.set_size(self.game.screen.get_size())
+        elif self.hero.live == False:
+            self.exit_state()
 
         self.group.update(delta_time)
         distance = (self.hero.rect.x - self.map_layer.map_rect.center[0])**2 + (self.hero.rect.y - self.map_layer.map_rect.center[1])**2
 
         # 1 / 1000  chance of encounter enemy
         # if distance > 1000000 and int(numpy.random.uniform(0, 1000)) == 500:
-            # TODO: spawn enemy
-            # print('spawned')
-            # self.game.fools.append(Enemy(self.game,attr[numpy.random.uniform(0, 11)%3] ))
-            # self.game.fools[-1].position[0] = self.hero.position[0]+100+numpy.random.uniform(0, 11)
-            # self.game.fools[-1].position[1] = self.hero.position[1]+100+numpy.random.uniform(0, 11)
-        Battle(self.game,self.hero).enter_state()
+        #     # TODO: spawn enemy
+        #     Battle(self.game, self.hero).enter_state()
+        Battle(self.game, self.hero).enter_state()
         # pass
             
 

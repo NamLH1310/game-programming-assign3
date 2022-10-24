@@ -30,7 +30,7 @@ class Game:
             'button_click': None,
             'pause': False,
             'resize': True,
-            'mouse_click': (0,0),
+            'mouse_click': None,
             'change': False,
             'act': False,
             'def': False,
@@ -63,6 +63,7 @@ class Game:
     def handle_events(self):
 
         # handle events and single key pressed
+        self.actions['mouse_click'] = None
         for event in pg.event.get():
             match event.type:
                 case pg.QUIT:
