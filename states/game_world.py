@@ -29,7 +29,7 @@ class Player(Sprite):
         self.buff = 1
         self.debuff = 0
         self.move_set: list[MOVESET] = [
-            MOVESET.ATT, MOVESET.DEF
+            MOVESET.ATT, MOVESET.DEF, MOVESET.DEBUFF
         ]
         self.ult_counter = 0
         self.attr_index=0
@@ -125,6 +125,7 @@ class Player(Sprite):
                 attack = self.strength*(self.buff-self.debuff) * 50
                 target.health -= attack
                 self.move_set.remove(MOVESET.ULT)
+                self.state = MOVESET.DEF
                   
     def change_attr(self):
         print('change')

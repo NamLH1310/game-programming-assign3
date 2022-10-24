@@ -16,7 +16,7 @@ class Enemy(Sprite):
         self.health = 200
         self.strength = 20
         self.move_set: list[MOVESET] = [
-            MOVESET.ATT, MOVESET.DEF
+            MOVESET.ATT, MOVESET.DEF, MOVESET.DEBUFF
         ]
         self.buff = 1
         self.debuff = 0
@@ -87,7 +87,7 @@ class Boss(Enemy):
         self.health = 1500
         self.strength = 200
         self.move_set: list[MOVESET] = [
-            MOVESET.ATT, MOVESET.DEF, MOVESET.ULT
+            MOVESET.ATT, MOVESET.DEF, MOVESET.ULT, MOVESET.DEBUFF
         ]
         self.ult_counter = 0
         self.buff = 1
@@ -127,8 +127,8 @@ class Boss(Enemy):
         super().fight(target)
         if self.state== MOVESET.ULT:
             self.ult_counter+=1
-            if self.ult_counter == 4:
-                target.health = 0
+            if self.ult_counter >= 4:
+                target.health -= 10000
     def change_attr(self):
         self.attr_index = (self.attr_index+1)%len(self.attr_list)
         self.attr = self.attr_list[self.attr_index]
