@@ -256,8 +256,6 @@ class GameWorld(State):
                 pass
 
     def render(self, surface):
-        for sprite in self.group.sprites():
-            print(sprite)
         map_rect = self.map_layer.map_rect
 
         offset_x = surface.get_width() >> 2

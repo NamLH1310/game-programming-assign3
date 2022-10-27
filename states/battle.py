@@ -6,6 +6,8 @@ import numpy.random
 
 
 class Enemy(Sprite):
+    max_attack = 1
+
     def __init__(self, game, attr: MOVESET, pos):
         super().__init__()
         image = pg.image.load(f'{RESOURCES_DIR}/graphics/innman.png').convert()
@@ -22,6 +24,7 @@ class Enemy(Sprite):
         self.debuff = 0
         self.attr = attr
         self.state = MOVESET.ATT
+        self.attack_times = 0
         # Hard code frames
         self.walking_frames = {
             'left': [
@@ -70,10 +73,23 @@ class Enemy(Sprite):
             if target.state == MOVESET.DEF:
                 target.health-=attack
             self.buff+=0.1
+
+    
     def act(self, player):
         #TODO lam con ai hay cai action list cho may con quai di/ mob
-        
-        pass
+        # At high health, they start att for maximum 2 times
+        # Below 75% health, they start def
+        # Below 10% health, they start debuff
+
+        if self.health >= 0.9 * self.max_health:
+            if (self.attack_times < Enemy.max_attack):
+                self.state = MOVESET.ATT
+                self.attack_times += 1
+            else:
+                self.state = MOVESET.DEF
+        elif self.health > 0.1 * self.max_health: 
+            self.state = MOVESET.DEF
+        self.fight(player)
     
 
 class Boss(Enemy):
@@ -129,6 +145,7 @@ class Boss(Enemy):
             self.ult_counter+=1
             if self.ult_counter >= 4:
                 target.health -= 10000
+
     def change_attr(self):
         self.attr_index = (self.attr_index+1)%len(self.attr_list)
         self.attr = self.attr_list[self.attr_index]
@@ -170,7 +187,7 @@ class Battle(State):
             if self.player_wait_time<=0 and self.fool.rect.collidepoint(actions['mouse_click']):
                 print('hit')
                 self.player.fight(self.fool)
-                self.player_wait_time = self.player_action_cooldown           
+                self.player_wait_time = self.player_action_cooldown
         elif self.change_wait_time<=0:
             self.change_wait_time = self.change_cool_down
             if actions['change']:
@@ -191,6 +208,7 @@ class Battle(State):
                 self.player.state = MOVESET.ULT
             else:
                 self.change_wait_time = 0
+
         if self.fool_wait_time <= 0 :
             self.fool.act(self.player)
             self.fool_wait_time = self.fool_action_cooldown
@@ -255,6 +273,9 @@ class Battle(State):
         self.game.screen.blit(pg.transform.scale(self.fool.image,(250,250)) ,self.fool_pos)
         
     def display_player(self):
+        print("----------------")
+        print("Player action cool down: " + str(self.player_action_cooldown))
+        print("Player wait time: " + str(self.player_wait_time))
         
         attr_type=self.font_status.render( 'Attribute: ' +self.get_str(self.player.attr),True, BLACK)
         state = self.font_status.render('Action State: '+self.get_str(self.player.state), True, BLACK)
