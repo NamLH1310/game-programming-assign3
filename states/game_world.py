@@ -1,5 +1,4 @@
 from enum import Enum
-from pickle import TRUE
 import numpy.random
 import numpy as np
 import pygame.image
@@ -7,7 +6,7 @@ import pyscroll
 import pytmx
 from pygame.sprite import Sprite
 
-from constants import BLACK, RESOURCES_DIR, MOVESET
+from constants import BLACK, RESOURCES_DIR, MOVESET, POSITION
 from states.battle import Battle, BossBattle
 from states.pause_menu import PauseMenu
 from states.state import State
@@ -102,6 +101,9 @@ class Player(Sprite):
         self.position[1] += (np.sin(np.deg2rad(direction_y)) * self.velocity * dt) * move[1]
         self.rect.topleft = self.position
         self.feet.midbottom = self.rect.midbottom
+        print("--------------")
+        print("position x: " + str(self.position[0]))
+        print("position y: " + str(self.position[1]))
 
     def move_back(self) -> None:
         self.position = self.old_position
@@ -139,6 +141,32 @@ class Player(Sprite):
         self.attr_index = (self.attr_index+1)%len(self.attr_list)
         self.attr = self.attr_list[self.attr_index]
 
+class Treasure(Sprite):
+    def __init__(self, game, attr: str):
+        super().__init__()
+        image = pygame.image.load(f'{RESOURCES_DIR}/graphics/treasurechest.png').convert_alpha()
+        image.set_colorkey(BLACK)
+        self.last_updated, self.current_frame = 0, 0
+        self.attr = attr
+        self.game = game
+        self.ult_counter = 0
+        self.attr_index = 0
+        self.position = POSITION.TREASURE[attr]
+        self.state = MOVESET.PURE
+        self.frames = {
+            'closed' : image.subsurface(0,0,32,32),
+            'opened' : image.subsurface(32,0,32,32)
+        }
+        self.image = self.frames['closed']
+        self.rect = self.image.get_rect()
+        self.collide_box = pygame.Rect(self.position[0], self.position[1], self.rect.width, self.rect.height)
+        self.rect.topleft = self.position
+        
+
+    def update(self, dt: float) -> None:
+        pass
+
+
 class GameWorld(State):
     def __init__(self, game):
         """
@@ -150,6 +178,8 @@ class GameWorld(State):
         screen = game.screen
         self.cave: pygame.Rect | None = None
         self.walls: list[pygame.Rect] = []
+        
+
         for obj in tiled_map.objects:
             if hasattr(obj, 'name') and obj.name == 'cave':
                 self.cave = pygame.Rect(obj.x, obj.y, obj.width, obj.height)
@@ -167,10 +197,15 @@ class GameWorld(State):
 
         # put the hero in the center of the map
         self.hero = game.player
+
+        # treasure list
+        self.treasures = game.treasures
+
         self.hero.position = list(self.map_layer.map_rect.center)
 
         # add our hero to the group
         self.group.add(self.hero)
+        self.group.add(self.treasures)
 
     def update(self, delta_time, actions):
         if actions['pause']:
@@ -198,10 +233,16 @@ class GameWorld(State):
                     sprite.move_back()
                 elif sprite.feet.colliderect(self.cave):
                     # TODO: BOSS fight
-                    BossBattle(self.game,self.hero).enter_state()
+                    # BossBattle(self.game,self.hero).enter_state()
                     pass
+            elif isinstance(sprite, Treasure):
+                if sprite.collide_box.colliderect(self.hero):
+                    sprite.image = sprite.frames['opened']
+                pass
 
     def render(self, surface):
+        for sprite in self.group.sprites():
+            print(sprite)
         map_rect = self.map_layer.map_rect
 
         offset_x = surface.get_width() >> 2

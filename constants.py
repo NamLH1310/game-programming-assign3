@@ -23,4 +23,15 @@ class MOVESET(Enum):
     TRAP = 'trap'  
     PURE = 'Pure'
 
+class POSITION():
+
+    TREASURE = {
+        MOVESET.FIRE : [1400, 1500],
+        MOVESET.EARTH : [2000, 3000],
+        MOVESET.WATER : [1000, 1200],
+        MOVESET.ULT : [1000, 2000]
+    }
+
+
 attr = [MOVESET.FIRE, MOVESET.WATER, MOVESET.EARTH]
+

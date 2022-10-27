@@ -6,9 +6,9 @@ import pygame.event
 import pygame_gui as pggui
 import numpy.random
 
-from constants import TARGET_FPS, attr
+from constants import TARGET_FPS, attr, MOVESET
 from states.battle import Battle, Enemy
-from states.game_world import Player
+from states.game_world import Player, Treasure
 from states.menu import Menu
 from states.state import State
 
@@ -40,6 +40,8 @@ class Game:
         self.state_stack: list[State] = []
         self.init_state()
         self.player = Player(self)
+        self.treasures= list([Treasure(self, MOVESET.FIRE), Treasure(self, MOVESET.EARTH),
+            Treasure(self, MOVESET.WATER), Treasure(self, MOVESET.ULT)])
         
 
     def init_screen(self, width, height):
