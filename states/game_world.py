@@ -152,7 +152,7 @@ class Treasure(Sprite):
         self.ult_counter = 0
         self.attr_index = 0
         self.position = POSITION.TREASURE[attr]
-        self.state = MOVESET.PURE
+        self.state = 'close'
         self.frames = {
             'closed' : image.subsurface(0,0,32,32),
             'opened' : image.subsurface(32,0,32,32)
@@ -162,6 +162,19 @@ class Treasure(Sprite):
         self.collide_box = pygame.Rect(self.position[0], self.position[1], self.rect.width, self.rect.height)
         self.rect.topleft = self.position
         
+    def open(self, player: Player):
+        if self.state == 'close':
+            self.image = self.frames['opened']
+            self.state = 'open'
+        if (self.attr not in player.attr_list) and self.attr != MOVESET.ULT:
+            player.attr_list.append(self.attr)
+        elif self.attr == MOVESET.ULT and (self.attr not in player.move_set):
+            player.move_set.append(self.attr)
+
+    def close(self):
+        if self.state == 'open':
+            self.image = self.frames['closed']
+            self.state == 'close'
 
     def update(self, dt: float) -> None:
         pass
@@ -204,8 +217,8 @@ class GameWorld(State):
         self.hero.position = list(self.map_layer.map_rect.center)
 
         # add our hero to the group
-        self.group.add(self.hero)
         self.group.add(self.treasures)
+        self.group.add(self.hero)
 
     def update(self, delta_time, actions):
         if actions['pause']:
@@ -233,11 +246,13 @@ class GameWorld(State):
                     sprite.move_back()
                 elif sprite.feet.colliderect(self.cave):
                     # TODO: BOSS fight
-                    # BossBattle(self.game,self.hero).enter_state()
-                    pass
+                    BossBattle(self.game,self.hero).enter_state()
             elif isinstance(sprite, Treasure):
                 if sprite.collide_box.colliderect(self.hero):
-                    sprite.image = sprite.frames['opened']
+                    sprite.open(self.hero)
+                else:
+                    sprite.close()
+                    
                 pass
 
     def render(self, surface):
