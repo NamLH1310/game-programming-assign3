@@ -86,8 +86,9 @@ class Boss(Enemy):
         self.max_health = 1500
         self.health = 1500
         self.strength = 200
+        self.move_set_index = 0
         self.move_set: list[MOVESET] = [
-            MOVESET.ATT, MOVESET.DEF, MOVESET.ULT, MOVESET.DEBUFF
+            MOVESET.ATT, MOVESET.DEF, MOVESET.DEBUFF, MOVESET.ULT
         ]
         self.ult_counter = 0
         self.buff = 1
@@ -135,7 +136,12 @@ class Boss(Enemy):
     
     def act(self, player):
         #TODO lam con ai hay cai action list cho may con quai di/ bodd
-        pass
+        self.change_attr()
+        self.fight(player)
+        if self.state != MOVESET.ULT:
+            self.move_set_index +=1
+        self.state = self.move_set[self.move_set_index]
+        
 
 class Battle(State):
     def __init__(self, game, player):
