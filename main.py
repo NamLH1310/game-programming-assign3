@@ -21,11 +21,11 @@ class Game:
         self.ui_manager = pggui.UIManager((self.SCREEN_WIDTH, self.SCREEN_HEIGHT), 'assets/themes/button_theme.json')
         self.dt, self.prev_time = 0.0, 0.0
         self.running, self.playing, self.win, self.lose = True, True, False, False
-        self.actions: dict[str, bool | Tuple[int,int] | pggui.elements.UIButton | None] = {
-            'left': False,
-            'right': False,
-            'up': False,
-            'down': False,
+        self.actions: dict[str, bool | Tuple[int,int]| int | pggui.elements.UIButton | None] = {
+            'left': 360,
+            'right': 360,
+            'up': 360,
+            'down': 360,
             'start': False,
             'button_click': None,
             'pause': False,
@@ -68,6 +68,8 @@ class Game:
     def handle_events(self):
         
         self.actions['change'] = self.actions['act'] = self.actions['def'] =self.actions['debuff']= self.actions['ult']=False
+        self.actions['down'] = self.actions['up'] = 360
+        self.actions['left'] = self.actions['right'] = 360
 
         # handle events and single key pressed
         self.actions['mouse_click'] = None
@@ -91,18 +93,14 @@ class Game:
         pressed = pygame.key.get_pressed()
         if isinstance(self.state_stack[-1],Battle)==False:
             if pressed[pg.K_a]:
-                self.actions['left'] = True
+                self.actions['left'] = 180
             elif pressed[pg.K_d]:
-                self.actions['right'] = True
-            else:
-                self.actions['left'] = self.actions['right'] = False
+                self.actions['right'] = 0
 
             if pressed[pg.K_s]:
-                self.actions['down'] = True
+                self.actions['down'] = 90
             elif pressed[pg.K_w]:
-                self.actions['up'] = True
-            else:
-                self.actions['down'] = self.actions['up'] = False
+                self.actions['up'] = -90
         else:
             if pressed[pg.K_x]:
                 self.actions['change'] = True

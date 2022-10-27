@@ -1,6 +1,7 @@
 from enum import Enum
 from pickle import TRUE
 import numpy.random
+import numpy as np
 import pygame.image
 import pyscroll
 import pytmx
@@ -70,19 +71,25 @@ class Player(Sprite):
         actions = self.game.actions
 
         state: str | None = None
-        direction_x = actions["right"] - actions["left"]
-        direction_y = actions["down"] - actions["up"]
+        move = [1,1]
+        direction_x = (actions["right"] + actions["left"])
+        direction_y = (actions["down"] + actions["up"])
 
-        if direction_y == 1:
+        if direction_y == 90+360 or direction_y == 90:
             state = 'down'
-        elif direction_y == -1:
+        elif direction_y == -90+360 or direction_y == -90:
             state = 'up'
 
-        if direction_x == 1:
+        if direction_x == 0+360 or direction_x == 0:
             state = 'right'
-        elif direction_x == -1:
+        elif direction_x == 180+360 or direction_x == 180:
             state = 'left'
-
+            
+        if direction_x == 720:
+            move[0] = 0
+        if direction_y == 720:
+            move[1]=0
+            
         # animation
         now = pygame.time.get_ticks()
         if state and now - self.last_updated > 200:
@@ -91,8 +98,8 @@ class Player(Sprite):
             self.image = self.walking_frames[state][self.current_frame]
 
         self.old_position = self.position[:]
-        self.position[0] += direction_x * self.velocity * dt
-        self.position[1] += direction_y * self.velocity * dt
+        self.position[0] += (np.cos(np.deg2rad(direction_x))  * self.velocity * dt) * move[0]
+        self.position[1] += (np.sin(np.deg2rad(direction_y)) * self.velocity * dt) * move[1]
         self.rect.topleft = self.position
         self.feet.midbottom = self.rect.midbottom
 
@@ -177,11 +184,11 @@ class GameWorld(State):
         distance = (self.hero.rect.x - self.map_layer.map_rect.center[0])**2 + (self.hero.rect.y - self.map_layer.map_rect.center[1])**2
 
         # 1 / 1000  chance of encounter enemy
-        # if distance > 1000000 and int(numpy.random.uniform(0, 1000)) == 500:
-        #     # TODO: spawn enemy
-        #     Battle(self.game, self.hero).enter_state()
+        if distance > 1000000 and int(numpy.random.uniform(0, 1000)) == 500:
+            # TODO: spawn enemy
+            Battle(self.game, self.hero).enter_state()
         # Battle(self.game, self.hero).enter_state()
-        BossBattle(self.game,self.hero).enter_state()
+        # BossBattle(self.game,self.hero).enter_state()
         # pass
             
 
