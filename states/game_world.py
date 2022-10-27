@@ -177,10 +177,11 @@ class GameWorld(State):
         distance = (self.hero.rect.x - self.map_layer.map_rect.center[0])**2 + (self.hero.rect.y - self.map_layer.map_rect.center[1])**2
 
         # 1 / 1000  chance of encounter enemy
-        if distance > 1000000 and int(numpy.random.uniform(0, 1000)) == 500:
-            # TODO: spawn enemy
-            Battle(self.game, self.hero).enter_state()
+        # if distance > 1000000 and int(numpy.random.uniform(0, 1000)) == 500:
+        #     # TODO: spawn enemy
+        #     Battle(self.game, self.hero).enter_state()
         # Battle(self.game, self.hero).enter_state()
+        BossBattle(self.game,self.hero).enter_state()
         # pass
             
 

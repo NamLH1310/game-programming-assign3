@@ -1,6 +1,6 @@
 from states.state import State
 from pygame.sprite import Sprite
-from constants import BLACK, BLUE, GREEN, RED, RESOURCES_DIR, MOVESET, WHITE, YELLOW, attr
+from constants import BLACK, BLUE, GREEEN_KEY, GREEN, RED, RESOURCES_DIR, MOVESET, WHITE, YELLOW, attr
 import pygame as pg
 import numpy.random
 
@@ -80,7 +80,7 @@ class Boss(Enemy):
     def __init__(self, game, attr: MOVESET, pos):
         super().__init__(game, attr, pos)
         image = pg.image.load(f'{RESOURCES_DIR}/graphics/king.png').convert()
-        image.set_colorkey(WHITE)
+        image.set_colorkey(GREEEN_KEY)
         self.last_updated, self.current_frame = 0, 0
         self.game = game
         self.max_health = 1500

@@ -7,6 +7,7 @@ RED = (255,0,0)
 GREEN = (0,255,0)
 YELLOW = (255,255,0)
 BLUE = (0,0,255)
+GREEEN_KEY = (59,210,66)
 
 TARGET_FPS = 60
 RESOURCES_DIR = f'{os.getcwd()}/assets'
