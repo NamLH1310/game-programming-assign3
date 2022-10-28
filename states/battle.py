@@ -77,9 +77,6 @@ class Enemy(Sprite):
     
     def act(self, player):
         #TODO lam con ai hay cai action list cho may con quai di/ mob
-        # At high health, they start att for maximum 2 times
-        # Below 75% health, they start def
-        # Below 10% health, they start debuff
 
         if self.health >= 0.9 * self.max_health:
             if (self.attack_times < Enemy.max_attack):
@@ -89,6 +86,8 @@ class Enemy(Sprite):
                 self.state = MOVESET.DEF
         elif self.health > 0.1 * self.max_health: 
             self.state = MOVESET.DEF
+        else:
+            self.state = MOVESET.DEBUFF
         self.fight(player)
     
 
