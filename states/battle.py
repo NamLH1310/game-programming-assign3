@@ -16,7 +16,7 @@ class Enemy(Sprite):
         self.game = game
         self.max_health = 200
         self.health = 200
-        self.strength = 20
+        self.strength = 10
         self.move_set: list[MOVESET] = [
             MOVESET.ATT, MOVESET.DEF, MOVESET.DEBUFF
         ]
@@ -64,6 +64,7 @@ class Enemy(Sprite):
             if attack<0:
                 attack=0
             if self.attr == target.attr and target.state == MOVESET.DEF:
+                print('blocked')
                 attack = 0
             target.health-=attack
         elif self.state == MOVESET.DEBUFF:
@@ -77,18 +78,16 @@ class Enemy(Sprite):
     
     def act(self, player):
         #TODO lam con ai hay cai action list cho may con quai di/ mob
-
-        if self.health >= 0.9 * self.max_health:
-            if (self.attack_times < Enemy.max_attack):
-                self.state = MOVESET.ATT
-                self.attack_times += 1
-            else:
-                self.state = MOVESET.DEF
-        elif self.health > 0.1 * self.max_health: 
-            self.state = MOVESET.DEF
-        else:
-            self.state = MOVESET.DEBUFF
+        self.attack_times+=1
         self.fight(player)
+        if self.health >= 0.9 * self.max_health:
+            if self.attack_times > Enemy.max_attack:
+                self.state = MOVESET.ATT if self.state == MOVESET.DEF else MOVESET.DEF
+                self.attack_times = 0
+        elif self.health > 0.1 * self.max_health: 
+            self.state = MOVESET.DEBUFF
+        else:
+            self.state = MOVESET.DEF
     
 
 class Boss(Enemy):
@@ -172,7 +171,7 @@ class Battle(State):
         self.player_wait_time:float = 0
         self.player_action_cooldown:float = 60
         self.fool_wait_time:float = 90
-        self.fool_action_cooldown:float = 90
+        self.fool_action_cooldown:float = 120
         self.bg= pg.image.load(f'{RESOURCES_DIR}/graphics/selectionbox.png').convert()
         self.bg = pg.transform.scale(self.bg,(800, 600))
         self.orb = pg.image.load(f'{RESOURCES_DIR}/graphics/ORB.png')

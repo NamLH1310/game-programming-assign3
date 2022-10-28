@@ -130,8 +130,8 @@ class Player(Sprite):
             self.buff+=0.1
         elif self.state == MOVESET.ULT:
             self.ult_counter +=1
-            if self.ult_counter == 3:
-                attack = self.strength*(self.buff-self.debuff) * 50
+            if self.ult_counter >= 3:
+                attack = self.strength*(self.buff-self.debuff) * 100
                 target.health -= attack
                 self.move_set.remove(MOVESET.ULT)
                 self.state = MOVESET.DEF
