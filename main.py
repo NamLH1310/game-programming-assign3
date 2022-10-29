@@ -4,7 +4,6 @@ from typing import Tuple
 import pygame as pg
 import pygame.event
 import pygame_gui as pggui
-import numpy.random
 
 from constants import TARGET_FPS, attr, MOVESET
 from states.battle import Battle, Enemy
@@ -70,8 +69,8 @@ class Game:
     def handle_events(self):
         
         self.actions['change'] = self.actions['act'] = self.actions['def'] =self.actions['debuff']= self.actions['ult']=False
-        self.actions['down'] = self.actions['up'] = 360
-        self.actions['left'] = self.actions['right'] = 360
+        self.actions['down'] = self.actions['up'] = 0
+        self.actions['left'] = self.actions['right'] = 0
 
         # handle events and single key pressed
         self.actions['mouse_click'] = None
@@ -95,14 +94,14 @@ class Game:
         pressed = pygame.key.get_pressed()
         if isinstance(self.state_stack[-1],Battle)==False:
             if pressed[pg.K_a]:
-                self.actions['left'] = 180
+                self.actions['left'] = 1
             elif pressed[pg.K_d]:
-                self.actions['right'] = 0
+                self.actions['right'] = 1
 
             if pressed[pg.K_s]:
-                self.actions['down'] = 90
+                self.actions['down'] = 1
             elif pressed[pg.K_w]:
-                self.actions['up'] = -90
+                self.actions['up'] = 1
         else:
             if pressed[pg.K_x]:
                 self.actions['change'] = True

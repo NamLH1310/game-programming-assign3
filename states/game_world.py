@@ -1,4 +1,5 @@
 from enum import Enum
+import math
 import numpy.random
 import numpy as np
 import pygame.image
@@ -65,30 +66,32 @@ class Player(Sprite):
         self.direction = [0, 0]
         # Only the feet should be collided with objects, not whole body
         self.feet = pygame.Rect(0, 0, self.rect.width * 0.5, 8)
+        
+    def vecLength(self,x,y):
+        rv = math.sqrt(pow(x,2)+pow(y,2))
+        if rv == 0:
+            rv =1
+        return rv
 
     def update(self, dt: float) -> None:
         actions = self.game.actions
 
         state: str | None = None
-        move = [1,1]
-        direction_x = (actions["right"] + actions["left"])
-        direction_y = (actions["down"] + actions["up"])
+        direction_x = (actions["right"] - actions["left"])
+        direction_y = (actions["down"] - actions["up"])
 
-        if direction_y == 90+360 or direction_y == 90:
+        if direction_y == 1 :
             state = 'down'
-        elif direction_y == -90+360 or direction_y == -90:
+        elif direction_y == -1:
             state = 'up'
 
-        if direction_x == 0+360 or direction_x == 0:
+        if direction_x == 1:
             state = 'right'
-        elif direction_x == 180+360 or direction_x == 180:
+        elif direction_x == -1:
             state = 'left'
             
-        if direction_x == 720:
-            move[0] = 0
-        if direction_y == 720:
-            move[1]=0
-            
+        length = self.vecLength(direction_x,direction_y)
+
         # animation
         now = pygame.time.get_ticks()
         if state and now - self.last_updated > 200:
@@ -97,8 +100,8 @@ class Player(Sprite):
             self.image = self.walking_frames[state][self.current_frame]
 
         self.old_position = self.position[:]
-        self.position[0] += (np.cos(np.deg2rad(direction_x))  * self.velocity * dt) * move[0]
-        self.position[1] += (np.sin(np.deg2rad(direction_y)) * self.velocity * dt) * move[1]
+        self.position[0] += (direction_x/length  * self.velocity * dt)
+        self.position[1] += (direction_y/length * self.velocity * dt) 
         self.rect.topleft = self.position
         self.feet.midbottom = self.rect.midbottom
         print("--------------")
@@ -113,21 +116,22 @@ class Player(Sprite):
     def fight(self, target)->None:
         if self.state == MOVESET.ATT:
              attack = self.strength*(self.buff-self.debuff)
+             self.buff+=0.1
              if attack<0:
-                 attack=0
+                 attack = 0
              if self.attr == target.attr and target.state == MOVESET.DEF:
                  attack = 0
              target.health-=attack
         elif self.state == MOVESET.DEBUFF:
              if target == self:
-                 target.buff += 0.1
+                 target.buff += 0.2
              else:
-                 target.debuff-=0.1
+                 target.debuff+=0.2
         elif self.state == MOVESET.DEF:
             attack = self.strength * 2
             if target.state == MOVESET.DEF:
                 target.health-=attack
-            self.buff+=0.1
+            self.debuff+=0.1
         elif self.state == MOVESET.ULT:
             self.ult_counter +=1
             if self.ult_counter >= 3:

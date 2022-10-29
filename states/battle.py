@@ -60,20 +60,24 @@ class Enemy(Sprite):
 
     def fight(self, target)->None:
         if self.state == MOVESET.ATT:
-            attack = self.strength*(self.buff-self.debuff)
-            if attack<0:
-                attack=0
-            if self.attr == target.attr and target.state == MOVESET.DEF:
-                print('blocked')
-                attack = 0
-            target.health-=attack
+             attack = self.strength*(self.buff-self.debuff)
+             self.buff+=0.1
+             if attack<0:
+                 attack = 0
+             if self.attr == target.attr and target.state == MOVESET.DEF:
+                 attack = 0
+                 self.buff -= 0.1
+             target.health-=attack
         elif self.state == MOVESET.DEBUFF:
-            target.debuff-=0.1
+             if target == self:
+                 target.buff += 0.2
+             else:
+                 target.debuff+=0.2
         elif self.state == MOVESET.DEF:
             attack = self.strength * 2
             if target.state == MOVESET.DEF:
                 target.health-=attack
-            self.buff+=0.1
+            self.debuff+=0.1
 
     
     def act(self, player):
