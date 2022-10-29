@@ -74,7 +74,8 @@ class Enemy(Sprite):
              if target == self:
                  target.buff += 0.2
              else:
-                 target.debuff+=0.2
+                if target.debuff <= 0.5:
+                    target.debuff+=0.2
         elif self.state == MOVESET.DEF:
             attack = self.strength * 2
             if target.state == MOVESET.DEF:
