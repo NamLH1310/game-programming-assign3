@@ -5,7 +5,7 @@ import pygame as pg
 import pygame.event
 import pygame_gui as pggui
 
-from constants import TARGET_FPS, attr, MOVESET
+from constants import TARGET_FPS, attr, MOVESET, RESOURCES_DIR
 from states.battle import Battle, Enemy
 from states.game_world import Player, Treasure
 from states.menu import Menu
@@ -15,6 +15,7 @@ from states.state import State
 class Game:
     def __init__(self):
         pg.init()
+        self.move_sound = pg.mixer.Sound(f'{RESOURCES_DIR}/music/footstep.mp3')
         self.SCREEN_WIDTH, self.SCREEN_HEIGHT = 800, 600
         self.screen = pg.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT), pg.RESIZABLE)
         self.ui_manager = pggui.UIManager((self.SCREEN_WIDTH, self.SCREEN_HEIGHT), 'assets/themes/button_theme.json')
@@ -95,12 +96,20 @@ class Game:
         if isinstance(self.state_stack[-1],Battle)==False:
             if pressed[pg.K_a]:
                 self.actions['left'] = 1
+                if not pg.mixer.get_busy():
+                    pygame.mixer.Channel(0).play(self.move_sound)
             elif pressed[pg.K_d]:
+                if not pg.mixer.get_busy():
+                    pygame.mixer.Channel(0).play(self.move_sound)
                 self.actions['right'] = 1
 
             if pressed[pg.K_s]:
                 self.actions['down'] = 1
+                if not pg.mixer.get_busy():
+                    pygame.mixer.Channel(0).play(self.move_sound)
             elif pressed[pg.K_w]:
+                if not pg.mixer.get_busy():
+                    pygame.mixer.Channel(0).play(self.move_sound)
                 self.actions['up'] = 1
         else:
             if pressed[pg.K_x]:

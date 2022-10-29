@@ -66,7 +66,9 @@ class Player(Sprite):
         self.direction = [0, 0]
         # Only the feet should be collided with objects, not whole body
         self.feet = pygame.Rect(0, 0, self.rect.width * 0.5, 8)
-        
+        self.water_spell_sound = pygame.mixer.Sound(f'{RESOURCES_DIR}/music/waterspell.wav')
+        self.earth_spell_sound = pygame.mixer.Sound(f'{RESOURCES_DIR}/music/earthspell.wav')
+        self.fire_spell_sound = pygame.mixer.Sound(f'{RESOURCES_DIR}/music/firespell.wav')
     def vecLength(self,x,y):
         rv = math.sqrt(pow(x,2)+pow(y,2))
         if rv == 0:
@@ -104,9 +106,6 @@ class Player(Sprite):
         self.position[1] += (direction_y/length * self.velocity * dt) 
         self.rect.topleft = self.position
         self.feet.midbottom = self.rect.midbottom
-        print("--------------")
-        print("position x: " + str(self.position[0]))
-        print("position y: " + str(self.position[1]))
 
     def move_back(self) -> None:
         self.position = self.old_position
@@ -115,17 +114,25 @@ class Player(Sprite):
 
     def fight(self, target)->None:
         if self.state == MOVESET.ATT:
-             attack = self.strength*(self.buff-self.debuff)
-             self.buff+=0.1
-             if attack<0:
+            # Check spell sound
+            if self.attr == MOVESET.FIRE:
+                self.fire_spell_sound.play()
+            elif self.attr == MOVESET.EARTH:
+                self.earth_spell_sound.play()
+            elif self.attr == MOVESET.WATER:
+                self.water_spell_sound.play()
+
+            attack = self.strength*(self.buff-self.debuff)
+            self.buff+=0.1
+            if attack<0:
                  attack = 0
-             if self.attr == target.attr and target.state == MOVESET.DEF:
+            if self.attr == target.attr and target.state == MOVESET.DEF:
                  attack = 0
-             target.health-=attack
+            target.health-=attack
         elif self.state == MOVESET.DEBUFF:
-             if target == self:
+            if target == self:
                  target.buff += 0.2
-             else:
+            else:
                  target.debuff+=0.2
         elif self.state == MOVESET.DEF:
             attack = self.strength * 2
@@ -151,6 +158,7 @@ class Treasure(Sprite):
         image = pygame.image.load(f'{RESOURCES_DIR}/graphics/treasurechest.png').convert_alpha()
         image.set_colorkey(BLACK)
         self.last_updated, self.current_frame = 0, 0
+        self.sound = pygame.mixer.Sound(f'{RESOURCES_DIR}/music/opentreasure.mp3')
         self.attr = attr
         self.game = game
         self.ult_counter = 0
@@ -168,6 +176,7 @@ class Treasure(Sprite):
         
     def open(self, player: Player):
         if self.state == 'close':
+            self.sound.play()
             self.image = self.frames['opened']
             self.state = 'open'
         if (self.attr not in player.attr_list) and self.attr != MOVESET.ULT:
@@ -234,13 +243,12 @@ class GameWorld(State):
 
         self.group.update(delta_time)
         distance = (self.hero.rect.x - self.map_layer.map_rect.center[0])**2 + (self.hero.rect.y - self.map_layer.map_rect.center[1])**2
-
         # 1 / 1000  chance of encounter enemy
         if distance > 1000000 and int(numpy.random.uniform(0, 1000)) == 500:
             # TODO: spawn enemy
-            Battle(self.game, self.hero).enter_state()
-        # Battle(self.game, self.hero).enter_state()
-        # BossBattle(self.game,self.hero).enter_state()
+            Battle(self.game, self.hero, f'{RESOURCES_DIR}/music/battle.mp3').enter_state()
+        # For boss battle
+        # BossBattle(self.game,self.hero, f'{RESOURCES_DIR}/music/bossbattle.mp3').enter_state()
         # pass
             
 

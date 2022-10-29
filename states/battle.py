@@ -11,12 +11,13 @@ class Enemy(Sprite):
     def __init__(self, game, attr: MOVESET, pos):
         super().__init__()
         image = pg.image.load(f'{RESOURCES_DIR}/graphics/innman.png').convert()
-        image.set_colorkey(WHITE)
+        image.set_colorkey(WHITE)    
         self.last_updated, self.current_frame = 0, 0
         self.game = game
         self.max_health = 200
         self.health = 200
         self.strength = 10
+        self.hit_sound = pg.mixer.Sound(f'{RESOURCES_DIR}/music/hitsound.wav')
         self.move_set: list[MOVESET] = [
             MOVESET.ATT, MOVESET.DEF, MOVESET.DEBUFF
         ]
@@ -60,6 +61,7 @@ class Enemy(Sprite):
 
     def fight(self, target)->None:
         if self.state == MOVESET.ATT:
+             self.hit_sound.play()
              attack = self.strength*(self.buff-self.debuff)
              self.buff+=0.1
              if attack<0:
@@ -78,6 +80,7 @@ class Enemy(Sprite):
             if target.state == MOVESET.DEF:
                 target.health-=attack
             self.debuff+=0.1
+            
 
     
     def act(self, player):
@@ -141,10 +144,13 @@ class Boss(Enemy):
         self.rect = self.image.get_rect()
         self.rect.topleft = pos
         self.feet = pg.Rect(0, 0, self.rect.width * 0.5, 8)
+        self.ulti_sound = pg.mixer.Sound(f'{RESOURCES_DIR}/music/ulti.wav')
+        self.ulti_sound.set_volume(0.5)
         
     def fight(self, target)->None:
         super().fight(target)
         if self.state== MOVESET.ULT:
+            self.ulti_sound.play()
             self.ult_counter+=1
             if self.ult_counter >= 4:
                 target.health -= 10000
@@ -163,7 +169,7 @@ class Boss(Enemy):
         
 
 class Battle(State):
-    def __init__(self, game, player):
+    def __init__(self, game, player, sound):
         super().__init__(game)
         self.font_title = pg.font.SysFont('comicsans',40)
         self.font_status = pg.font.SysFont('comicsans',20)
@@ -180,7 +186,12 @@ class Battle(State):
         self.bg = pg.transform.scale(self.bg,(800, 600))
         self.orb = pg.image.load(f'{RESOURCES_DIR}/graphics/ORB.png')
         self.fighting = True
+        self.music = pg.mixer.music
+        self.music.load(sound)
+        self.music.play(-1, fade_ms=2000)
+
         
+
 
     def update(self, delta_time, actions):
         if (self.fool.alive ==False) or (self.player.live == False):
@@ -223,7 +234,9 @@ class Battle(State):
             
         if self.fool.health<=0:
             self.fool.alive = False
+            self.music.stop()
         if self.player.health<=0:
+            self.music.stop()
             self.player.alive = False
         
             
@@ -321,9 +334,11 @@ class Battle(State):
         
 
 class BossBattle(Battle):
-    def __init__(self, game, player):
-        super().__init__(game, player)
+    def __init__(self, game, player, sound):
+
+        super().__init__(game, player, sound)
         self.fool = Boss(game, MOVESET.FIRE , self.fool_pos)
+        
         if MOVESET.ULT not in player.move_set:
             self.player_wait_time:float = 0
             self.player_action_cooldown:float = 80
