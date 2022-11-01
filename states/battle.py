@@ -92,8 +92,10 @@ class Enemy(Sprite):
             if self.attack_times > Enemy.max_attack:
                 self.state = MOVESET.ATT if self.state == MOVESET.DEF else MOVESET.DEF
                 self.attack_times = 0
-        elif self.health > 0.1 * self.max_health: 
+        elif self.health > 0.6 * self.max_health: 
             self.state = MOVESET.DEBUFF
+        elif self.health > 0.2 * self.max_health:
+            self.state = MOVESET.ATT
         else:
             self.state = MOVESET.DEF
     
@@ -187,6 +189,11 @@ class Battle(State):
         self.bg = pg.transform.scale(self.bg,(800, 600))
         self.orb = pg.image.load(f'{RESOURCES_DIR}/graphics/ORB.png')
         self.fighting = True
+        self.surrender = False
+        self.exit_button = pg.image.load(f'{RESOURCES_DIR}/graphics/flag.png')
+        self.exit_button = pg.transform.scale(self.exit_button,(100,100))
+        self.exit_rect = self.exit_button.get_rect()
+        self.exit_rect.topleft = (50,300)
         self.music = pg.mixer.music
         self.music.load(sound)
         self.music.play(-1, fade_ms=2000)
@@ -196,18 +203,23 @@ class Battle(State):
 
     def update(self, delta_time, actions):
         if (self.fool.alive ==False) or (self.player.live == False):
-            self.fighting =False
+            self.fighting = False
         self.player_wait_time =self.player_wait_time- delta_time if (self.player_wait_time>0) else 0
         self.change_wait_time =self.change_wait_time- delta_time if (self.change_wait_time>0) else 0
         self.fool_wait_time-=delta_time
         if self.fighting == False:
             self.reward()
             self.exit_state()
+        
+            self.exit_state()
+        
         if actions['mouse_click'] is not None:
             if self.player_wait_time<=0 and self.fool.rect.collidepoint(actions['mouse_click']):
                 print('hit')
                 self.player.fight(self.fool)
                 self.player_wait_time = self.player_action_cooldown
+            elif self.exit_rect.collidepoint(actions['mouse_click']):
+                self.surrender = True
         elif self.change_wait_time<=0:
             self.change_wait_time = self.change_cool_down
             if actions['change']:
@@ -270,6 +282,13 @@ class Battle(State):
             self.player.strength+=5
             self.player.max_health+=20
             self.player.health= self.player.health+40 if(self.player.max_health-self.player.health>=40) else self.player.max_health
+            
+    def penalty(self):
+        if self.player.health >= 30:
+            self.player.buff = 1
+            self.player.debuff /= 2
+            self.player.health -= 20
+            self.player.max_health -= 5
 
     
     def display_enemy(self):
@@ -289,7 +308,7 @@ class Battle(State):
         pg.draw.rect(self.game.screen, GREEN, life_bar)
         pg.draw.rect(self.game.screen, BLUE, stamina_bar)
         pg.draw.rect(self.game.screen, YELLOW, regain_bar)
-        
+                
         self.game.screen.blit(attr_type,(30,50))
         self.game.screen.blit(state,(self.game.SCREEN_WIDTH-state.get_width()-30,50))
         self.game.screen.blit(pg.transform.scale(self.fool.image,(250,250)) ,self.fool_pos)
@@ -310,6 +329,8 @@ class Battle(State):
         
         self.game.screen.blit(attr_type,(50,450))
         self.game.screen.blit(state,(50,500))
+        
+        self.game.screen.blit(self.exit_button, (50,300))
         
         ult_orb = self.orb.copy()
         

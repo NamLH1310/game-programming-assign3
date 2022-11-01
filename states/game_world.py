@@ -249,6 +249,7 @@ class GameWorld(State):
             Battle(self.game, self.hero, f'{RESOURCES_DIR}/music/battle.mp3').enter_state()
         # For boss battle
         # BossBattle(self.game,self.hero, f'{RESOURCES_DIR}/music/bossbattle.mp3').enter_state()
+        # Battle(self.game, self.hero, f'{RESOURCES_DIR}/music/battle.mp3').enter_state()
         # pass
             
 
