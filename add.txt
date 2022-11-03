@@ -1,0 +1,3 @@
+Thêm cho t mấy cái hộp kho báu tổng cộng 4 hộp
+3 hộp cho 3 MOVESET FIRE, WATER, EARTH cho hero attr_lít
+1 hộp cho MOVESET ULT cho hero move_set
