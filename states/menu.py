@@ -1,4 +1,6 @@
-from constants import BLACK
+import numpy
+
+from constants import BLACK, WHITE
 from states.game_world import GameWorld
 from states.state import State
 
@@ -15,29 +17,52 @@ class Menu(State):
         :type ui_manager: pygame_gui.UIManager
         """
         State.__init__(self, game, None)
-        self.ui_manager = ui_manager
-        button_w, button_h = self.game.SCREEN_WIDTH >> 3, self.game.SCREEN_HEIGHT >> 3
-        self.start_button = pggui.elements.UIButton(
-            pg.Rect((self.game.SCREEN_WIDTH - button_w) >> 1, (self.game.SCREEN_HEIGHT >> 1) - button_h, button_w, button_h),
-            'start',
-            self.ui_manager,
-            object_id='start')
-        self.quit_button = pggui.elements.UIButton(
-            pg.Rect((self.game.SCREEN_WIDTH - button_w) >> 1, self.game.SCREEN_HEIGHT >> 1, button_w, button_h),
-            'quit',
-            self.ui_manager,
-            object_id='quit')
+        font = pg.font.SysFont('comicsans', 40)
+
+        self.text: dict[str, pg.Surface] = {
+            'quit': font.render('quit', True, WHITE),
+            'new_game': font.render('new game', True, WHITE),
+        }
+
+        self.canvas = self.game.screen.copy()
+        self.indicator_coord = []
+        self.index = 0
 
     def update(self, delta_time, actions):
-        match actions['button_click']:
-            case self.start_button:
+        if actions['arrow_up']:
+            self.index -= 1
+            if self.index < 0:
+                self.index = len(self.text) - 1
+        elif actions['arrow_down']:
+            self.index = (self.index + 1) % len(self.text)
+        elif actions['enter']:
+            if self.index == 1:
                 GameWorld(self.game).enter_state()
-            case self.quit_button:
-                self.game.running = False
-                self.game.playing = False
+            else:
+                self.game.running = self.game.playing = False
 
         self.game.reset_keys()
 
+    def draw_indicator(self):
+        h = self.text['quit'].get_height()
+        x, y = self.indicator_coord[self.index]
+        x -= numpy.int(numpy.sqrt(3) / 2 * h) + 20
+        pg.draw.polygon(self.canvas, WHITE, ((x, y), (x, y + h), (x + numpy.int(numpy.sqrt(3) / 2 * h), y + h // 2)))
+
     def render(self, surface):
-        surface.fill(BLACK)
-        self.ui_manager.draw_ui(surface)
+        self.canvas.fill(BLACK)
+
+        sum_height = 0
+        for v in self.text.values():
+            sum_height += v.get_height()
+
+        for k in self.text:
+            w = self.text[k].get_width()
+            x, y = (self.game.SCREEN_WIDTH - w) >> 1, (self.game.SCREEN_HEIGHT - sum_height) >> 1
+            self.indicator_coord.append((x, y))
+            self.canvas.blit(self.text[k], (x, y))
+
+            sum_height -= self.text[k].get_height() << 1
+
+        self.draw_indicator()
+        surface.blit(self.canvas, (0, 0))

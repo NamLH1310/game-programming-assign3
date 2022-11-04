@@ -5,8 +5,8 @@ import pygame as pg
 import pygame.event
 import pygame_gui as pggui
 
-from constants import TARGET_FPS, attr, MOVESET, RESOURCES_DIR
-from states.battle import Battle, Enemy
+from constants import TARGET_FPS, MOVESET, RESOURCES_DIR
+from states.battle import Battle
 from states.game_world import Player, Treasure
 from states.menu import Menu
 from states.state import State
@@ -21,7 +21,7 @@ class Game:
         self.ui_manager = pggui.UIManager((self.SCREEN_WIDTH, self.SCREEN_HEIGHT), 'assets/themes/button_theme.json')
         self.dt, self.prev_time = 0.0, 0.0
         self.running, self.playing, self.win, self.lose = True, True, False, False
-        self.actions: dict[str, bool | Tuple[int,int]| int | pggui.elements.UIButton | None] = {
+        self.actions: dict[str, bool | Tuple[int, int] | int | pggui.elements.UIButton | None] = {
             'left': 360,
             'right': 360,
             'up': 360,
@@ -35,14 +35,16 @@ class Game:
             'act': False,
             'def': False,
             'debuff': False,
-            'ult': False
+            'ult': False,
+            'arrow_up': False,
+            'arrow_down': False,
+            'enter': False,
         }
         self.state_stack: list[State] = []
         self.init_state()
         self.player = Player(self)
-        self.treasures= list([Treasure(self, MOVESET.FIRE), Treasure(self, MOVESET.EARTH),
-            Treasure(self, MOVESET.WATER), Treasure(self, MOVESET.ULT)])
-        
+        self.treasures = list([Treasure(self, MOVESET.FIRE), Treasure(self, MOVESET.EARTH),
+                               Treasure(self, MOVESET.WATER), Treasure(self, MOVESET.ULT)])
 
     def init_screen(self, width, height):
         self.screen = pg.display.set_mode((width, height), pg.RESIZABLE)
@@ -68,8 +70,9 @@ class Game:
         self.prev_time = now
 
     def handle_events(self):
-        
-        self.actions['change'] = self.actions['act'] = self.actions['def'] =self.actions['debuff']= self.actions['ult']=False
+
+        self.actions['change'] = self.actions['act'] = self.actions['def'] = self.actions['debuff'] = self.actions[
+            'ult'] = False
         self.actions['down'] = self.actions['up'] = 0
         self.actions['left'] = self.actions['right'] = 0
 
@@ -82,18 +85,32 @@ class Game:
                     self.running = False
                 case pg.KEYDOWN:
                     self.actions['pause'] = event.key == pg.K_ESCAPE and not self.actions['pause']
+                    self.actions['arrow_up'] = event.key == pg.K_UP
+                    self.actions['arrow_down'] = event.key == pg.K_DOWN
+                    self.actions['enter'] = event.key == pg.K_RETURN
                 case pg.VIDEORESIZE:
                     self.init_screen(event.w, event.h)
                 case pggui.UI_BUTTON_PRESSED:
                     self.actions['button_click'] = event.ui_element
                 case pg.MOUSEBUTTONDOWN:
-                    if isinstance(self.state_stack[-1],Battle):
+                    if isinstance(self.state_stack[-1], Battle):
                         self.actions['mouse_click'] = pg.mouse.get_pos()
             self.ui_manager.process_events(event)
 
         # handle consecutive key pressed
         pressed = pygame.key.get_pressed()
-        if isinstance(self.state_stack[-1],Battle)==False:
+        if isinstance(self.state_stack[-1], Battle):
+            if pressed[pg.K_x]:
+                self.actions['change'] = True
+            elif pressed[pg.K_z]:
+                self.actions['act'] = True
+            elif pressed[pg.K_c]:
+                self.actions['debuff'] = True
+            elif pressed[pg.K_d]:
+                self.actions['def'] = True
+            elif pressed[pg.K_v]:
+                self.actions['ult'] = True
+        else:
             if pressed[pg.K_a]:
                 self.actions['left'] = 1
                 if not pg.mixer.get_busy():
@@ -111,17 +128,6 @@ class Game:
                 if not pg.mixer.get_busy():
                     pygame.mixer.Channel(0).play(self.move_sound)
                 self.actions['up'] = 1
-        else:
-            if pressed[pg.K_x]:
-                self.actions['change'] = True
-            elif pressed[pg.K_z]:
-                self.actions['act'] = True
-            elif pressed[pg.K_c]:
-                self.actions['debuff'] = True
-            elif pressed[pg.K_d]:
-                self.actions['def'] = True
-            elif pressed[pg.K_v]:
-                self.actions['ult'] = True
 
     def update(self):
         dt = self.dt * TARGET_FPS
